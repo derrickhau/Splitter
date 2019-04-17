@@ -1,33 +1,45 @@
 pragma solidity ^0.5.0;
 
 contract Splitter {
-	address payable public alice;
+	address payable public alice ;
 	address payable public bob;
 	address payable public carol;
+	uint public splitEther;
+	bool public locked; //false = default
 	
-	event transferSuccess(address receiver, uint amount); 
-
-	constructor (address payable _alice, address payable _bob, address payable _carol) public payable {
-		alice = _alice;
-		bob = _bob;
-		carol = _carol;
-	}
+	event TransferSuccess(address indexed receiver, address indexed sender, uint indexed amount); 
 
 	modifier onlyAlice() {
 		require (msg.sender == alice);
 		_;
 	}
-
-	function getBalance (address account) public view returns(uint) {
-		uint balance = getBalance(account);
-		return balance; 
+	
+    modifier noReentrancy() {
+        require(!locked);
+        locked = true;
+        _;
+        locked = false;
+    }
+    
+	constructor (address payable _bob, address payable _carol) public {
+		alice = msg.sender;
+		bob = _bob;
+		carol = _carol;
 	}
 	
-    function splitterOfEth(uint aliceEther) public payable onlyAlice() {
-        uint splitEther = aliceEther / 2;
+	function () external payable onlyAlice() {
+	    splitterOfEth(msg.value);
+	}
+
+    function splitterOfEth(uint aliceEther) public payable onlyAlice() noReentrancy() {
+        splitEther = aliceEther / 2;
         bob.transfer(splitEther);
-        emit transferSuccess (bob, splitEther); 
-        carol.transfer(splitEther / 2);
-        emit transferSuccess (carol, splitEther); 
+        emit TransferSuccess (bob, alice, splitEther); 
+        carol.transfer(splitEther);
+        emit TransferSuccess (carol, alice, splitEther);
+    }
+
+	function getBalance(address account) public view returns (uint) {
+        return address(account).balance;
     }
 }
