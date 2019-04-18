@@ -1,46 +1,18 @@
 pragma solidity ^0.5.0;
 
-contract Paused {
-    bool contractPaused;
-    address payable public alice;
+import "./Pausable.sol";
 
-    event ContractPaused (bool);
-    
-    modifier onlyAlice() {
-        require (msg.sender == alice, "Restricted access, Alice only");
-        _;
-    }
-    modifier notPaused() {
-        require (!contractPaused);
-        _;
-    }
-    
-    constructor () public {
-        alice = msg.sender;
-    }
-
-    function toggleContractPaused() public onlyAlice() {
-        if (contractPaused == false) {
-            contractPaused = true;
-            emit ContractPaused (true);
-        } else {
-            contractPaused = false;
-            emit ContractPaused (false);
-        }    
-    }
-}
-
-contract Splitter is Paused {
+contract Splitter is Pausable {
     address payable public bob;
     address payable public carol;
-    uint bobEtherTotal;
-    uint carolEtherTotal;
-    bool tieBreakerSwitch;
+    uint bobEtherAvailable;
+    uint carolEtherAvailable;
+    bool tieBreakerBob;
     
     event DepositReceived(uint indexed depositAmount);
-    event TieBreakerResult(string winner);
+    event TieBreakerResult(bool tieBreakerBob);
     event SplitSuccess(uint bobEtherSplit, uint carolEtherSplit);
-    event WithdrawalSuccess(address indexed receiver, address sender, uint indexed amountReceived);
+    event WithdrawalSent(address indexed receiver, address sender, uint indexed amountSent);
 
     constructor (address payable _bob, address payable _carol) public {
         require(_bob != address(0));
@@ -48,50 +20,51 @@ contract Splitter is Paused {
         require(_carol != address(0));
         carol = _carol;
     }
-
+    
     function depositFunds() public payable onlyAlice() notPaused() {
         emit DepositReceived(msg.value);
         uint bobEtherSplit;
         uint carolEtherSplit;
         uint splitEther = msg.value / 2;
-        if (msg.value % 2 != 0)
-            if (tieBreaker())
+        if (msg.value % 2 != 0) {
+            if (tieBreakerBob) {
                 bobEtherSplit = 1;
-            else
+            } else {
                 carolEtherSplit = 1;
+            }
+            emit TieBreakerResult(tieBreakerBob);
+            tieBreakerBob = !tieBreakerBob;
+        }
         bobEtherSplit += splitEther;
         carolEtherSplit += splitEther;
         require (msg.value == bobEtherSplit + carolEtherSplit, "Split error");
-        bobEtherTotal += bobEtherSplit;
-        carolEtherTotal += carolEtherSplit;
+        bobEtherAvailable += bobEtherSplit;
+        carolEtherAvailable += carolEtherSplit;
         emit SplitSuccess(bobEtherSplit, carolEtherSplit);
-    }
+    }    
+    // function tieBreaker() private returns (bool){
+    //     if (tieBreakerSwitch) {
+    //         tieBreakerSwitch = false;
+    //         return true;
+    //     } else {
+    //         tieBreakerSwitch = true;
+            // return false;
     
     function bobEtherWithdrawal() public payable notPaused() {
         require(bob == msg.sender, "Restricted access, Bob only");
-        require(bobEtherTotal > 0, "Insufficient funds");
-        emit WithdrawalSuccess (bob, alice, bobEtherTotal);
-        bob.transfer(bobEtherTotal);
-        bobEtherTotal = 0;
+        require(bobEtherAvailable > 0, "Insufficient funds");
+        uint bobEtherTransfer = bobEtherAvailable;
+        bobEtherAvailable = 0;
+        emit WithdrawalSent (bob, alice, bobEtherTransfer);
+        bob.transfer(bobEtherTransfer);
     }
     
     function carolEtherWithdrawal() public payable notPaused() {
         require(carol == msg.sender, "Restricted access, Carol only");
-        require(carolEtherTotal > 0, "Insufficient funds");
-        emit WithdrawalSuccess (carol, alice, carolEtherTotal);
-        carol.transfer(carolEtherTotal);
-        carolEtherTotal = 0;
+        require(carolEtherAvailable > 0, "Insufficient funds");
+        uint carolEtherTransfer = carolEtherAvailable;
+        carolEtherAvailable = 0;
+        emit WithdrawalSent (carol, alice, carolEtherTransfer);
+        carol.transfer(carolEtherTransfer);
     } 
-    
-    function tieBreaker() private returns (bool){
-        if (tieBreakerSwitch) {
-            emit TieBreakerResult("Bob");
-            tieBreakerSwitch = false;
-            return true;
-        } else {
-            emit TieBreakerResult("Carol");
-            tieBreakerSwitch = true;
-            return false;
-        }
-    }
 }
