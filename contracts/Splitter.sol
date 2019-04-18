@@ -1,48 +1,48 @@
 pragma solidity ^0.5.0;
 
 contract Splitter {
-	address payable public alice;
-	address payable public bob;
-	address payable public carol;
-	uint bobEtherTotal;
-	uint carolEtherTotal;
-	bool bobEtherLocked;
-	bool carolEtherLocked;
-	bool contractPaused;
-	bool tieBreakerSwitch;
+    address payable public alice;
+    address payable public bob;
+    address payable public carol;
+    uint bobEtherTotal;
+    uint carolEtherTotal;
+    bool bobEtherLocked;
+    bool carolEtherLocked;
+    bool contractPaused;
+    bool tieBreakerSwitch;
     
     event DepositReceived(uint indexed depositAmount);
     event TieBreakerResult(string winner);
     event SplitSuccess(uint bobEtherSplit, bool bobEtherLocked, uint carolEtherSplit, bool carolEtherLocked);
-	event WithdrawalSuccess(address indexed receiver, address sender, uint indexed amountReceived);
-	event ContractPaused (bool);
-	
-	modifier onlyAlice() {
-		require (msg.sender == alice);
-		_;
-	}
-	
-	modifier onlyEvenDeposit() {
+    event WithdrawalSuccess(address indexed receiver, address sender, uint indexed amountReceived);
+    event ContractPaused (bool);
+    
+    modifier onlyAlice() {
+        require (msg.sender == alice);
+        _;
+    }
+    
+    modifier onlyEvenDeposit() {
         require(msg.value % 2 == 0, "Please use even value");
         _;
-	}
+    }
     
     modifier notPaused {
         require (contractPaused == false);
         _;
     }
     
-    constructor () public {
+    constructor (address payable _bob, address payable _carol) public {
         alice = msg.sender;
-        bob = 0x14723A09ACff6D2A60DcdF7aA4AFf308FDDC160C;
+        bob = _bob;
         require(bob != address(0));
-        carol = 0x4B0897b0513fdC7C541B6d9D7E929C4e5364D2dB;
+        carol = _carol;
         require(carol != address(0));
-	}
-	
-	function depositFunds() public payable onlyAlice() {
-	    emit DepositReceived(msg.value);
-	    splitterOfEth(msg.value);
+    }
+    
+    function depositFunds() public payable onlyAlice() {
+        emit DepositReceived(msg.value);
+        splitterOfEth(msg.value);
     }
 
     function splitterOfEth(uint aliceEther) private onlyAlice() notPaused() {
@@ -61,7 +61,7 @@ contract Splitter {
         carolEtherTotal += carolEtherSplit;
         bobEtherLocked = false;
         carolEtherLocked = false;
-	    emit SplitSuccess(bobEtherSplit, bobEtherLocked, carolEtherSplit, carolEtherLocked);
+        emit SplitSuccess(bobEtherSplit, bobEtherLocked, carolEtherSplit, carolEtherLocked);
     }
     
     function tieBreaker() private returns (bool){
