@@ -42,13 +42,6 @@ contract Splitter is Pausable {
         carolEtherAvailable += carolEtherSplit;
         emit SplitSuccess(bobEtherSplit, carolEtherSplit);
     }    
-    // function tieBreaker() private returns (bool){
-    //     if (tieBreakerSwitch) {
-    //         tieBreakerSwitch = false;
-    //         return true;
-    //     } else {
-    //         tieBreakerSwitch = true;
-            // return false;
     
     function bobEtherWithdrawal() public payable notPaused() {
         require(bob == msg.sender, "Restricted access, Bob only");
