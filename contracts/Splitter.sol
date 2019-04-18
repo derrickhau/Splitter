@@ -9,14 +9,14 @@ contract Splitter {
 	bool bobEtherLocked;
 	bool carolEtherLocked;
 	bool contractPaused;
-	uint tieBreakerCounter;
+	bool tieBreakerSwitch;
     
     event DepositReceived(uint indexed depositAmount);
     event TieBreakerResult(string winner);
     event SplitSuccess(uint bobEtherSplit, bool bobEtherLocked, uint carolEtherSplit, bool carolEtherLocked);
 	event WithdrawalSuccess(address indexed receiver, address sender, uint indexed amountReceived);
 	event ContractPaused (bool);
-    
+	
 	modifier onlyAlice() {
 		require (msg.sender == alice);
 		_;
@@ -32,12 +32,12 @@ contract Splitter {
         _;
     }
     
-	constructor (address payable _bob, address payable _carol) public {
-		alice = msg.sender;
-		bob = _bob;
-		require(bob != address(0));
-		carol = _carol;
-		require(carol != address(0));
+    constructor () public {
+        alice = msg.sender;
+        bob = 0x14723A09ACff6D2A60DcdF7aA4AFf308FDDC160C;
+        require(bob != address(0));
+        carol = 0x4B0897b0513fdC7C541B6d9D7E929C4e5364D2dB;
+        require(carol != address(0));
 	}
 	
 	function depositFunds() public payable onlyAlice() {
@@ -50,7 +50,7 @@ contract Splitter {
         uint carolEtherSplit;
         uint splitEther = aliceEther / 2;
         if (splitEther * 2 != aliceEther)
-            if (tieBreakerBob())
+            if (tieBreaker())
                 bobEtherSplit += 1;
             else
                 carolEtherSplit += 1;
@@ -64,13 +64,14 @@ contract Splitter {
 	    emit SplitSuccess(bobEtherSplit, bobEtherLocked, carolEtherSplit, carolEtherLocked);
     }
     
-    function tieBreakerBob() private returns (bool){
-        tieBreakerCounter += 1;
-        if (tieBreakerCounter % 2 == 0) {
+    function tieBreaker() private returns (bool){
+        if (tieBreakerSwitch) {
             emit TieBreakerResult("Bob");
+            tieBreakerSwitch = false;
             return true;
         } else {
             emit TieBreakerResult("Carol");
+            tieBreakerSwitch = true;
             return false;
         }
     }
