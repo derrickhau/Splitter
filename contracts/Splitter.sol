@@ -12,35 +12,38 @@ contract Splitter is Pausable {
     event DepositReceived(uint indexed depositAmount);
     event TieBreakerResult(bool tieBreakerBob);
     event SplitSuccess(uint bobEtherSplit, uint carolEtherSplit);
-    event WithdrawalSent(address indexed receiver, address sender, uint indexed amountSent);
+    event WithdrawalSent(address indexed receiver, uint indexed amountSent);
 
     constructor (address payable _bob, address payable _carol) public {
         require(_bob != address(0));
-        bob = _bob;
         require(_carol != address(0));
+        bob = _bob;
         carol = _carol;
     }
     
-    function depositFunds() public payable onlyAlice() notPaused() {
+    function depositFunds() public payable onlyOwner() notPaused() {
         emit DepositReceived(msg.value);
-        uint bobEtherSplit;
-        uint carolEtherSplit;
-        uint splitEther = msg.value / 2;
+        uint bobShare;
+        uint carolShare;
+        uint half = msg.value / 2;
         if (msg.value % 2 != 0) {
             if (tieBreakerBob) {
-                bobEtherSplit = 1;
+                bobShare = half + 1;
+                carolShare = half;
             } else {
-                carolEtherSplit = 1;
+                carolShare = half + 1;
+                bobShare = half;
             }
             emit TieBreakerResult(tieBreakerBob);
             tieBreakerBob = !tieBreakerBob;
+        } else {
+            bobShare = half;
+            carolShare = half;
         }
-        bobEtherSplit += splitEther;
-        carolEtherSplit += splitEther;
-        require (msg.value == bobEtherSplit + carolEtherSplit, "Split error");
-        bobEtherAvailable += bobEtherSplit;
-        carolEtherAvailable += carolEtherSplit;
-        emit SplitSuccess(bobEtherSplit, carolEtherSplit);
+        require (msg.value == bobShare + carolShare, "Split error");
+        bobEtherAvailable += bobShare;
+        carolEtherAvailable += carolShare;
+        emit SplitSuccess(bobShare, carolShare);
     }    
     
     function bobEtherWithdrawal() public payable notPaused() {
@@ -48,7 +51,7 @@ contract Splitter is Pausable {
         require(bobEtherAvailable > 0, "Insufficient funds");
         uint bobEtherTransfer = bobEtherAvailable;
         bobEtherAvailable = 0;
-        emit WithdrawalSent (bob, alice, bobEtherTransfer);
+        emit WithdrawalSent (bob, bobEtherTransfer);
         bob.transfer(bobEtherTransfer);
     }
     
@@ -57,7 +60,7 @@ contract Splitter is Pausable {
         require(carolEtherAvailable > 0, "Insufficient funds");
         uint carolEtherTransfer = carolEtherAvailable;
         carolEtherAvailable = 0;
-        emit WithdrawalSent (carol, alice, carolEtherTransfer);
+        emit WithdrawalSent (carol, carolEtherTransfer);
         carol.transfer(carolEtherTransfer);
     } 
 }
