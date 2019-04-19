@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
 contract Owner {
-    address owner;
+    address private owner;
 
     modifier onlyOwner() {
         require (msg.sender == owner, "Restricted access, owner only");
