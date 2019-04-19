@@ -9,7 +9,6 @@ contract Splitter is Pausable {
     uint carolEtherAvailable;
     bool tieBreakerBob;
     
-    event DepositReceived(uint indexed depositAmount);
     event TieBreakerResult(bool tieBreakerBob);
     event SplitSuccess(uint bobEtherSplit, uint carolEtherSplit);
     event WithdrawalSent(address indexed receiver, uint indexed amountSent);
@@ -20,9 +19,8 @@ contract Splitter is Pausable {
         bob = _bob;
         carol = _carol;
     }
-    
+
     function depositFunds() public payable onlyOwner() notPaused() {
-        emit DepositReceived(msg.value);
         uint bobShare;
         uint carolShare;
         uint half = msg.value / 2;
@@ -40,7 +38,7 @@ contract Splitter is Pausable {
             bobShare = half;
             carolShare = half;
         }
-        require (msg.value == bobShare + carolShare, "Split error");
+        assert (msg.value == bobShare + carolShare, "Split error");
         bobEtherAvailable += bobShare;
         carolEtherAvailable += carolShare;
         emit SplitSuccess(bobShare, carolShare);
