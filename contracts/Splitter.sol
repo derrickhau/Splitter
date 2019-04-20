@@ -28,9 +28,9 @@ contract Splitter is Pausable {
             if (tieBreakerBob) { bobShare += 1; }
             else { carolShare += 1; }
             emit TieBreakerResult(tieBreakerBob);
-            tieBreakerBob = !tieBreakerBob            
+            tieBreakerBob = !tieBreakerBob;   
         }
-        assert (msg.value == bobShare + carolShare, "Split error");
+        require (msg.value == bobShare + carolShare, "Split error");
         bobEtherAvailable += bobShare;
         carolEtherAvailable += carolShare;
         emit SplitSuccess(bobShare, carolShare);
