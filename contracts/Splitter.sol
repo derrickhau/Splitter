@@ -3,15 +3,15 @@ pragma solidity ^0.5.0;
 import "./Pausable.sol";
 
 contract Splitter is Pausable {
+    mapping(address=>uint) public balances;
+
     address payable public bob;
     address payable public carol;
-    uint bobEtherAvailable;
-    uint carolEtherAvailable;
     bool tieBreakerBob;
     
     event TieBreakerResult(bool tieBreakerBob);
     event SplitSuccess(uint bobEtherSplit, uint carolEtherSplit);
-    event WithdrawalSent(address indexed receiver);
+    event WithdrawalSent(address indexed receiver, uint amount);
 
     constructor (address payable _bob, address payable _carol) public {
         require(_bob != address(0));
@@ -31,26 +31,16 @@ contract Splitter is Pausable {
             tieBreakerBob = !tieBreakerBob;   
         }
         require (msg.value == bobShare + carolShare, "Split error");
-        bobEtherAvailable += bobShare;
-        carolEtherAvailable += carolShare;
+        balances[bob] += bobShare;
+        balances[carol] += carolShare;
         emit SplitSuccess(bobShare, carolShare);
     }
     
-    function bobEtherWithdrawal() public payable notPaused() {
-        require(bob == msg.sender, "Restricted access, Bob only");
-        require(bobEtherAvailable > 0, "Insufficient funds");
-        uint bobEtherTransfer = bobEtherAvailable;
-        bobEtherAvailable = 0;
-        emit WithdrawalSent (bob);
-        bob.transfer(bobEtherTransfer);
+    function withdrawal() public payable notPaused() {
+        require(balances[msg.sender] > 0, "Insufficient funds");
+        uint etherTransfer = balances[msg.sender];
+        balances[msg.sender] = 0;
+        emit WithdrawalSent (msg.sender, etherTransfer);
+        msg.sender.transfer(etherTransfer);
     }
-    
-    function carolEtherWithdrawal() public payable notPaused() {
-        require(carol == msg.sender, "Restricted access, Carol only");
-        require(carolEtherAvailable > 0, "Insufficient funds");
-        uint carolEtherTransfer = carolEtherAvailable;
-        carolEtherAvailable = 0;
-        emit WithdrawalSent (carol);
-        carol.transfer(carolEtherTransfer);
-    } 
 }
