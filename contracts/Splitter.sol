@@ -11,7 +11,7 @@ contract Splitter is Pausable {
     
     event TieBreakerResult(bool tieBreakerBob);
     event SplitSuccess(uint bobEtherSplit, uint carolEtherSplit);
-    event WithdrawalSent(address indexed receiver, uint indexed amountSent);
+    event WithdrawalSent(address indexed receiver);
 
     constructor (address payable _bob, address payable _carol) public {
         require(_bob != address(0));
@@ -21,35 +21,27 @@ contract Splitter is Pausable {
     }
 
     function depositFunds() public payable onlyOwner() notPaused() {
-        uint bobShare;
-        uint carolShare;
         uint half = msg.value / 2;
+        uint bobShare = half;
+        uint carolShare = half;
         if (msg.value % 2 != 0) {
-            if (tieBreakerBob) {
-                bobShare = half + 1;
-                carolShare = half;
-            } else {
-                carolShare = half + 1;
-                bobShare = half;
-            }
+            if (tieBreakerBob) { bobShare += 1; }
+            else { carolShare += 1; }
             emit TieBreakerResult(tieBreakerBob);
-            tieBreakerBob = !tieBreakerBob;
-        } else {
-            bobShare = half;
-            carolShare = half;
+            tieBreakerBob = !tieBreakerBob            
         }
         assert (msg.value == bobShare + carolShare, "Split error");
         bobEtherAvailable += bobShare;
         carolEtherAvailable += carolShare;
         emit SplitSuccess(bobShare, carolShare);
-    }    
+    }
     
     function bobEtherWithdrawal() public payable notPaused() {
         require(bob == msg.sender, "Restricted access, Bob only");
         require(bobEtherAvailable > 0, "Insufficient funds");
         uint bobEtherTransfer = bobEtherAvailable;
         bobEtherAvailable = 0;
-        emit WithdrawalSent (bob, bobEtherTransfer);
+        emit WithdrawalSent (bob);
         bob.transfer(bobEtherTransfer);
     }
     
@@ -58,7 +50,7 @@ contract Splitter is Pausable {
         require(carolEtherAvailable > 0, "Insufficient funds");
         uint carolEtherTransfer = carolEtherAvailable;
         carolEtherAvailable = 0;
-        emit WithdrawalSent (carol, carolEtherTransfer);
+        emit WithdrawalSent (carol);
         carol.transfer(carolEtherTransfer);
     } 
 }

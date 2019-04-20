@@ -13,7 +13,6 @@ contract Pausable is Owner {
     }
     
     constructor () public {
-        contractPausedState = false;
     }
 
     function contractPaused(bool newState) public onlyOwner() {
