@@ -4,36 +4,28 @@ import "./Pausable.sol";
 
 contract Splitter is Pausable {
     mapping(address=>uint) public balances;
-
-    address payable public bob;
-    address payable public carol;
-    bool tieBreakerBob;
+    bool tieBreaker;
     
-    event TieBreakerResult(bool tieBreakerBob);
-    event SplitSuccess(uint bobEtherSplit, uint carolEtherSplit);
+    event TieBreakerResult(bool tieBreaker);
+    event SplitSuccess(uint recipient1Share, uint recipient2Share);
     event WithdrawalSent(address indexed receiver, uint amount);
 
-    constructor (address payable _bob, address payable _carol) public {
-        require(_bob != address(0));
-        require(_carol != address(0));
-        bob = _bob;
-        carol = _carol;
-    }
-
-    function depositFunds() public payable onlyOwner() notPaused() {
+    constructor () public {}
+    
+    function depositFunds(address recipient1, address recipient2) public payable onlyOwner() notPaused() {
         uint half = msg.value / 2;
-        uint bobShare = half;
-        uint carolShare = half;
+        uint recipient1Share = half;
+        uint recipient2Share = half;
         if (msg.value % 2 != 0) {
-            if (tieBreakerBob) { bobShare += 1; }
-            else { carolShare += 1; }
-            emit TieBreakerResult(tieBreakerBob);
-            tieBreakerBob = !tieBreakerBob;   
+            if (tieBreaker) { recipient1Share += 1; }
+            else { recipient2Share += 1; }
+            emit TieBreakerResult(tieBreaker);
+            tieBreaker = !tieBreaker;   
         }
-        require (msg.value == bobShare + carolShare, "Split error");
-        balances[bob] += bobShare;
-        balances[carol] += carolShare;
-        emit SplitSuccess(bobShare, carolShare);
+        require (msg.value == recipient1Share + recipient2Share, "Split error");
+        balances[recipient1] += recipient1Share;
+        balances[recipient2] += recipient2Share;
+        emit SplitSuccess(recipient1Share, recipient2Share);
     }
     
     function withdrawal() public payable notPaused() {

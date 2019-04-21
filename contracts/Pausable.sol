@@ -16,7 +16,7 @@ contract Pausable is Owner {
     }
 
     function contractPaused(bool newState) public onlyOwner() {
-        require(newState != contractPausedState, "Redundant request, no change made \nnewState");
+        require(newState != contractPausedState, "Redundant request, no change made");
         contractPausedState = newState;
         emit ContractPausedState (newState, msg.sender);
     }
