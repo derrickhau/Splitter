@@ -14,8 +14,8 @@ contract Splitter is Pausable {
     constructor () public {}
     
     function splitFunds(address recipient1, address recipient2) public payable notPaused() {
-        uint half = SafeMath.div(msg.value, 2);
-        uint remainder = SafeMath.mod(msg.value, 2);
+        uint half = msg.value.div(2);
+        uint remainder = msg.value.mod(2);
         if(remainder > 1) balances[msg.sender].add(remainder);
         balances[recipient1] = balances[recipient1].add(half);
         balances[recipient2] = balances[recipient2].add(half);
