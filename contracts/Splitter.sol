@@ -1,20 +1,21 @@
 pragma solidity ^0.5.0;
 
+import "https://github.com/OpenZeppelin/openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./Pausable.sol";
 
 contract Splitter is Pausable {
+    using SafeMath for uint;    
+
     mapping(address=>uint) public balances;
-    bool tieBreaker;
-    
-    event TieBreakerResult(bool tieBreaker);
-    event LogSplitFunds(address sender, uint amount, address recipient1, address recipient2);
-    event WithdrawalSent(address indexed receiver, uint amount);
+
+    event LogSplitFunds(address sender, uint amount, address indexed recipient1, address indexed recipient2);
+    event LogWithdrawalSent(address indexed receiver, uint amount);
 
     constructor () public {}
     
-    function splitFunds(address recipient1, address recipient2) public payable onlyOwner() notPaused() {
+    function splitFunds(address recipient1, address recipient2) public payable notPaused() {
         uint half = msg.value / 2;
-        if(msg.value % 2 > 0) balances[msg.sender] ++;
+        if(msg.value % 2 != 0) balances[msg.sender] ++;
         balances[recipient1] += half;
         balances[recipient2] += half;
         emit LogSplitFunds(msg.sender, msg.value, recipient1, recipient2);
@@ -24,7 +25,7 @@ contract Splitter is Pausable {
         require(balances[msg.sender] > 0, "Insufficient funds");
         uint etherTransfer = balances[msg.sender];
         balances[msg.sender] = 0;
-        emit WithdrawalSent (msg.sender, etherTransfer);
+        emit LogWithdrawalSent (msg.sender, etherTransfer);
         msg.sender.transfer(etherTransfer);
     }
 }
