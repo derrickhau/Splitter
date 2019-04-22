@@ -7,25 +7,17 @@ contract Splitter is Pausable {
     bool tieBreaker;
     
     event TieBreakerResult(bool tieBreaker);
-    event SplitSuccess(uint recipient1Share, uint recipient2Share);
+    event LogSplitFunds(address sender, uint amount, address recipient1, address recipient2);
     event WithdrawalSent(address indexed receiver, uint amount);
 
     constructor () public {}
     
-    function depositFunds(address recipient1, address recipient2) public payable onlyOwner() notPaused() {
+    function splitFunds(address recipient1, address recipient2) public payable onlyOwner() notPaused() {
         uint half = msg.value / 2;
-        uint recipient1Share = half;
-        uint recipient2Share = half;
-        if (msg.value % 2 != 0) {
-            if (tieBreaker) { recipient1Share += 1; }
-            else { recipient2Share += 1; }
-            emit TieBreakerResult(tieBreaker);
-            tieBreaker = !tieBreaker;   
-        }
-        require (msg.value == recipient1Share + recipient2Share, "Split error");
-        balances[recipient1] += recipient1Share;
-        balances[recipient2] += recipient2Share;
-        emit SplitSuccess(recipient1Share, recipient2Share);
+        if(msg.value % 2 > 0) balances[msg.sender] ++;
+        balances[recipient1] += half;
+        balances[recipient2] += half;
+        emit LogSplitFunds(msg.sender, msg.value, recipient1, recipient2);
     }
     
     function withdrawal() public payable notPaused() {
