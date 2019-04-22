@@ -15,9 +15,10 @@ contract Splitter is Pausable {
     
     function splitFunds(address recipient1, address recipient2) public payable notPaused() {
         uint half = SafeMath.div(msg.value, 2);
-        if(SafeMath.mod(msg.value, 2) != 0) balances[msg.sender] ++;
-        balances[recipient1] += half;
-        balances[recipient2] += half;
+        uint remainder = SafeMath.mod(msg.value, 2);
+        if(remainder > 1) balances[msg.sender] += remainder;
+        balances[recipient1] = SafeMath.add(balances[recipient1], half);
+        balances[recipient2] = SafeMath.add(balances[recipient2], half);
         emit LogSplitFunds(msg.sender, msg.value, recipient1, recipient2);
     }
     
