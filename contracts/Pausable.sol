@@ -11,9 +11,9 @@ contract Pausable is Owner {
         require (!contractPausedState);
         _;
     }
-    
-    constructor () public {
-        contractPausedState = false;
+
+    constructor (bool initialState) public {
+        contractPausedState = initialState;
     }
 
     function contractPaused(bool newState) public onlyOwner() {
