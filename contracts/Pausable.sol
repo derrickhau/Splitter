@@ -8,7 +8,7 @@ contract Pausable is Owner {
     event ContractPausedState (bool newState, address pausedBy);
     
     modifier notPaused() {
-        require (!contractPausedState);
+        require (!contractPausedState, "Contract is paused");
         _;
     }
 
