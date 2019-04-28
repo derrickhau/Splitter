@@ -3,20 +3,25 @@ pragma solidity ^0.5.0;
 import "./SafeMath.sol";
 import "./Pausable.sol";
 
-contract Splitter is Pausable (false) {
+contract Splitter is Pausable {
     using SafeMath for uint;    
 
     mapping(address => uint) public balances;
-
+    
+    event LogPreBalance(uint preBalance);
     event LogSplitFunds(address indexed sender, uint amount, address indexed recipient1, address indexed recipient2);
     event LogWithdrawalSent(address indexed receiver, uint amount);
+    event LogPostBalance(uint postBalance);
 
-    constructor Splitter(bool paused) Pausable(paused) public {}
-    
+    constructor (bool paused) Pausable(paused) public {}
+
     function splitFunds(address recipient1, address recipient2) public payable notPaused() {
+        emit LogPreBalance(balances[msg.sender]);
         uint half = msg.value.div(2);
-        uint remainder = msg.value.mod(2);
-        if(remainder > 1) balances[msg.sender].add(remainder);
+        if(msg.value.mod(2) == 1) {
+            balances[msg.sender].add(1);
+            emit LogPostBalance(balances[msg.sender]);
+        }
         balances[recipient1] = balances[recipient1].add(half);
         balances[recipient2] = balances[recipient2].add(half);
         emit LogSplitFunds(msg.sender, msg.value, recipient1, recipient2);
