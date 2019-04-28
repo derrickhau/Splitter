@@ -8,19 +8,15 @@ contract Splitter is Pausable {
 
     mapping(address => uint) public balances;
     
-    event LogPreBalance(uint preBalance);
     event LogSplitFunds(address indexed sender, uint amount, address indexed recipient1, address indexed recipient2);
     event LogWithdrawalSent(address indexed receiver, uint amount);
-    event LogPostBalance(uint postBalance);
 
     constructor (bool paused) Pausable(paused) public {}
 
     function splitFunds(address recipient1, address recipient2) public payable notPaused() {
-        emit LogPreBalance(balances[msg.sender]);
         uint half = msg.value.div(2);
         if(msg.value.mod(2) == 1) {
-            balances[msg.sender].add(1);
-            emit LogPostBalance(balances[msg.sender]);
+            balances[msg.sender] = balances[msg.sender].add(1);
         }
         balances[recipient1] = balances[recipient1].add(half);
         balances[recipient2] = balances[recipient2].add(half);
