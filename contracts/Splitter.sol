@@ -22,7 +22,7 @@ contract Splitter is Pausable {
         emit LogSplitFunds(msg.sender, msg.value, recipient1, recipient2);
     }
     
-    function withdrawa() public notPaused() {
+    function withdraw() public notPaused() {
         uint amountDue = balances[msg.sender];
         require(amountDue > 0, "Insufficient funds");
         balances[msg.sender] = 0;
