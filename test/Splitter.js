@@ -41,11 +41,13 @@ contract("Splitter", accounts => {
 		await instance.splitFunds(recipient1, recipient2, { from: owner, value: deposit });
 		let postBalance1 = await instance.balances.call(recipient1);
 		console.log("Balance before withdrawl: " postBalance1.toString(10);
-		const txObject = await instance.withdrawl({ from: recipient1 });
+		const txObject = await instance.withdraw({ from: recipient1 });
 		postBalance1 = await instance.balances.call(recipient1);
 		console.log("Balance after withdrawl: " postBalance1).toString(10);
 		assert.strictEqual(txObject.logs[0].args.amount.toString(10), "1",
 			"Failed to log withdrawl correctly");
+		assert.strictEqual(txObject.logs[0].args.amount.toString(10), postBalance1.toString(10),
+			"Failed to withdraw exact amount";
 	});
 
 	it("Should protect when onlyOwner is violated", async function () {

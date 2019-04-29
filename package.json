@@ -1,0 +1,32 @@
+{
+  "name": "splitter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/derrickhau/Splitter.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/derrickhau/Splitter/issues"
+  },
+  "homepage": "https://github.com/derrickhau/Splitter#readme",
+  "devDependencies": {
+    "create-html": "^4.1.0",
+    "truffle": "^5.0.8"
+  },
+  "dependencies": {
+    "bluebird": "^3.5.4",
+    "jquery": "^3.4.0",
+    "truffle-contract": "^4.0.13",
+    "web3": "^1.0.0-beta.37"
+  }
+}
