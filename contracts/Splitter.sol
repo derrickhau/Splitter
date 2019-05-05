@@ -12,7 +12,7 @@ contract Splitter is Pausable {
     event LogWithdrawalSent(address indexed receiver, uint amount);
 
     constructor (bool paused) Pausable(paused) public {}
-      
+
     function splitFunds(address recipient1, address recipient2) public payable notPaused() {
         uint half = msg.value.div(2);
         uint remainder = msg.value.mod(2);
