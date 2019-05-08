@@ -53,19 +53,17 @@ contract("Splitter", accounts => {
 		const txObject = await instance.withdraw({ from: recipient1 });
 		const accountBalance1 = await instance.balances.call(recipient1);
 		
-		const gasPrice = await web3.eth.getTransaction(txObject.tx)
-			.then (tx => tx.gasPrice);
-		const gasUsed= await web3.eth.getTransactionReceipt(txObject.tx)
-			.then (receipt => receipt.gasUsed);
-		const totalGasCost = gasPrice * gasUsed;
+		const gasPrice = (await web3.eth.getTransaction(txObject.tx)).gasPrice;
+		const gasUsed = (await web3.eth.getTransactionReceipt(txObject.tx)).gasUsed;
+		const totalGasCostBN = new BN(gasPrice).mul(new BN(gasUsed));
 
 		const postBalance1BN = new BN(await web3.eth.getBalance(recipient1));
 		
 		const withdrawlAmountBN = new BN(deposit / 2);
 		const postMinusWithdrawlAmountBN = new BN(postBalance1BN).sub(withdrawlAmountBN);
-		const postPlusGasBN = new BN(postBalance1BN.add(new BN(totalGasCost)))
+		const postPlusGasBN = new BN(postBalance1BN.add(totalGasCostBN));
 
-		assert.strictEqual(preBalance1BN.sub(postMinusWithdrawlAmountBN).toString(), totalGasCost.toString(),
+		assert.strictEqual(preBalance1BN.sub(postMinusWithdrawlAmountBN).toString(), totalGasCostBN.toString(),
 			"Failed to accurately calculate gas cost of withdrawl");
 		assert.strictEqual(txObject.logs[0].args.amount.toString(), withdrawlAmountBN.toString(),
 			"Failed to log withdrawl amount correctly");
