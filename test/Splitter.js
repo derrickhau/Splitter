@@ -38,12 +38,12 @@ contract("Splitter", accounts => {
 		postBalance1 = await instance.balances.call(recipient1);
 		const webCallBalance = await web3.eth.getBalance(recipient1);
 		assert.strictEqual(txObject.logs[0].args.amount.toString(), (deposit / 2).toString(),
-			"Failed to log withdrawl correctly");
+			"Failed to log withdrawal correctly");
 		assert.strictEqual(postBalance1.toString(), "0",
-			"Failed to zero account balance after withdrawl");
+			"Failed to zero account balance after withdrawal");
 	});
 
-	it("Should correctly calculate gas cost and withdrawl amount", async function () {
+	it("Should correctly calculate gas cost and withdrawal amount", async function () {
 		const BN = web3.utils.BN;
 		const deposit = 2; // Must be even number
 		await instance.splitFunds(recipient1, recipient2, { from: owner, value: deposit });
@@ -59,27 +59,26 @@ contract("Splitter", accounts => {
 
 		const postBalance1BN = new BN(await web3.eth.getBalance(recipient1));
 		
-		const withdrawlAmountBN = new BN(deposit / 2);
-		const postMinusWithdrawlAmountBN = new BN(postBalance1BN).sub(withdrawlAmountBN);
+		const withdrawalAmountBN = new BN(deposit / 2);
+		const postMinusWithdrawalAmountBN = new BN(postBalance1BN).sub(withdrawalAmountBN);
 		const postPlusGasBN = new BN(postBalance1BN.add(totalGasCostBN));
 
-		assert.strictEqual(preBalance1BN.sub(postMinusWithdrawlAmountBN).toString(), totalGasCostBN.toString(),
-			"Failed to accurately calculate gas cost of withdrawl");
-		assert.strictEqual(txObject.logs[0].args.amount.toString(), withdrawlAmountBN.toString(),
-			"Failed to log withdrawl amount correctly");
+		assert.strictEqual(preBalance1BN.sub(postMinusWithdrawalAmountBN).toString(), totalGasCostBN.toString(),
+			"Failed to accurately calculate gas cost of withdrawal");
+		assert.strictEqual(txObject.logs[0].args.amount.toString(), withdrawalAmountBN.toString(),
+			"Failed to log withdrawal amount correctly");
 		assert.strictEqual(accountBalance1.toString(), "0",
-			"Failed to zero account balance after withdrawl");
-		assert.strictEqual((postPlusGasBN.sub(preBalance1BN)).toString(), withdrawlAmountBN.toString(),
+			"Failed to zero account balance after withdrawal");
+		assert.strictEqual((postPlusGasBN.sub(preBalance1BN)).toString(), withdrawalAmountBN.toString(),
 			"Failed to withdraw correct amount");
 	});
 
-	it("Should pause contract and prevent withdrawl", async function () {
+	it("Should pause contract and prevent withdrawal", async function () {
 		const deposit = 2;
 		await instance.splitFunds(recipient1, recipient2, { from: owner, value: deposit });
 		await instance.contractPaused(true, { from: owner });
-		return instance.withdraw({ from: recipient1 }).then(
-			() => Promise.reject(new Error('Contract is paused')),
-			err => assert.instanceOf(err, Error)
-		)
+		return instance.withdraw({ from: recipient1 })
+			.then( () => Promise.reject(new Error('Contract is paused')),
+			err => assert.instanceOf(err, Error), "Paused state failed to prevent withdrawal");
 	});
 });
